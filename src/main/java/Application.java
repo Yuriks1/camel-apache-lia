@@ -23,7 +23,7 @@ public final class Application {
             try {
                 context.addRoutes(new MyRouteBuilder());
                 context.start();
-                Thread.sleep(1000);
+                Thread.sleep(60000);
                 context.stop();
             } catch (Exception e) {
                 e.printStackTrace();
@@ -41,11 +41,14 @@ public final class Application {
 
         @Override
         public void configure() {
-            from("file:C:\\Users\\juris\\lia").process(new Processor() {
-                        public void process(Exchange exchange) {
-                            System.out.println(exchange.getIn().getBody());
-                        }
-                    })
+            from("file:C:\\Users\\juris\\lia").convertBodyTo(String.class).process(exchange -> {
+             System.out.println("Exchange id:"+ exchange.getExchangeId());
+                System.out.println("Headers :"+ exchange.getMessage().getHeaders());
+                System.out.println(exchange.getIn().getBody());
+                exchange.getMessage().setHeader("CamelFileName",exchange.getMessage().getHeader("CamelFileName") + ".out");
+            })
+                    .to("file:C:\\Users\\juris\\out")
+                    .log("File Name: ${header.CamelFileName}, Body:${body} ")
                     .to("test-jms:queue:foo.bar");
         }
     }
